@@ -1,6 +1,15 @@
 
 
 
+function message(text) {
+    if(text == "A new day."){LogPanel.day++;}
+    //else if (text.includes("Balance ratio")) {}
+    else{LogPanel.messages.push(new LogMessage(false,text));}
+    console.log(text);
+    //console.log(LogPanel.messages);
+}
+
+
 
 
 function is_reached() {
@@ -20,9 +29,6 @@ function is_reached() {
 
     return (this.requires.length == founded);
 }
-
-
-
 
 /**
  * Returns a random number between min (inclusive) and max (exclusive)
@@ -46,15 +52,25 @@ String.prototype.capitalizeFirstLetter = function() {
 
 
 
-
-function message(text) {
-    console.log(text);
+// which best?)
+function sum( obj ) {
+    var sum = 0;
+    for( var el in obj ) {
+        if( obj.hasOwnProperty( el ) ) {
+            sum += parseFloat( obj[el] );
+        }
+    }
+    return sum;
 }
 
-function tick() {
-    message("A new day.");
-    Player.harvest();
-    Gatherer.tick();
-    Civilization.tick();
-    draw_all();
+// which best?)
+function sum( obj ) {
+    return Object.keys( obj )
+        .reduce( function( sum, key ){
+            return sum + parseFloat( obj[key] );
+        }, 0 );
 }
+
+
+
+

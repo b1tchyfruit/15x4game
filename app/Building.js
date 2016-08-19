@@ -18,7 +18,7 @@ function Building(name, types, price_ratio, price_resource, multiplying_formula,
     this.increase = function() {
         if (Player.volunteers < 1) {
             message('Not enough free volunteers');
-        } else if (this.workers > Civilization.buildings.teamwork.level ) {
+        } else if (this.workers + 1 > Civilization.updates.teamwork.level) {
             message('Not enough teamwork');
         } else {
             Player.volunteers--;
@@ -54,7 +54,7 @@ function Building(name, types, price_ratio, price_resource, multiplying_formula,
     };
 
     this.getEfficiency = function() {
-        return this.workers * (1 + (0.1 * this.level)) * this.multiplying_formula();
+        return Civilization.getHappiness() * this.workers * (1 + (0.1 * this.level)) * this.multiplying_formula();
     };
 
     this.getProductivity = function() {
