@@ -99,7 +99,9 @@ Player.checkEnthusiasm = function () {
 Player.reset = function () {
     this.volunteers = 0;
     this.volunteers_memory = 0;
+    savedLectures = {};
     localStorage.removeItem('Player');
+    location.reload();
 };
 
 Player.shareKnowledge = function() {
