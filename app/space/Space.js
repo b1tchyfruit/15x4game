@@ -1,9 +1,41 @@
 
 
-
 var SpaceHelper = {};
-SpaceHelper.generateMarket = function() {
-    return {'iron': {price: 100, count: 100}, 'oil': {price: 100, count: 100}, 'uranium': {price: 100, count: 100}, 'iridium': {price: 100, count: 100}};
+
+SpaceHelper.price_guide = {
+    solar:  {iron: 80, oil: 90, uranium: 120, iridium: 110},
+    orsala: {iron: 120, oil: 110, uranium: 80, iridium: 90},
+};
+
+SpaceHelper.generateMarket = function(base_prices) {
+    return {
+        'iron': SpaceHelper.generateOrder(base_prices.iron),
+        'oil': SpaceHelper.generateOrder(base_prices.oil),
+        'uranium': SpaceHelper.generateOrder(base_prices.uranium),
+        'iridium': SpaceHelper.generateOrder(base_prices.iridium)
+    };
+};
+
+SpaceHelper.generateOrder = function (base_price) {
+    var count = rand(80, 120);
+    var medium_price = parseInt(((100 * base_price) / count).toFixed(0));
+    var sell_price = rand(medium_price, medium_price+10);
+    var buy_price = rand(medium_price-10, medium_price);
+//    console.log(base_price, count, medium_price, sell_price, buy_price);
+    return {'sell_price': sell_price, 'buy_price': buy_price, count: count};
+};
+
+SpaceHelper.generateBeltAction = function(type) {
+    return {
+        'name': 'Mine '+type,
+        'code': function () {
+            if (Player.ship.checkSpace()) {
+                if (Player.withdrawEnthusiasm()) {
+                    Player.ship.reward(type, 1);
+                }
+            }
+        }
+    }
 };
 
 
@@ -18,6 +50,7 @@ Space = {
     flight: {
         counter: 0,
         length: 0,
+        warp_active: 0,
         target: {id: null, type: null, obj: null},
         arrival_function: {}
     },
@@ -38,19 +71,21 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     },
                     {
                         name: 'Earth', produce: 'oil',
                         action: {
                             name: 'Transform 1000 conventional units to 1 oil',
                             code: function () {
-                                if (Player.withdraw('conventional_units', 1000)) {
-                                    Player.ship.reward('oil', 1);
+                                if (Player.ship.checkSpace()) {
+                                    if (Player.withdraw('conventional_units', 1000)) {
+                                        Player.ship.reward('oil', 1);
+                                    }
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     },
                     {
                         name: 'Mars',
@@ -62,7 +97,7 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     },
                     {
                         name: 'Titan',
@@ -74,7 +109,7 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     }
                 ],
 
@@ -82,14 +117,14 @@ Space = {
                     {
                         name: 'Education University',
                         action: {
-                            name: 'Transform 100 likes to 1 uranium',
+                            name: 'Transform 1000 likes to 1 uranium',
                             code: function () {
                                 if (Player.withdraw('likes', 1000)) {
                                     Player.ship.reward('uranium', 1);
                                 }
                             }
                         },
-                        services: {store: [], trade: {}}
+                        services: {store: [], trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     },
                     {
                         name: 'Business Center',
@@ -97,26 +132,27 @@ Space = {
                             name: 'Transform 10 money to 1 iridium',
                             code: function () {
                                 if (Player.withdraw('money', 10)) {
-                                    Player.ship.reward('iridium,', 1);
+                                    Player.ship.reward('iridium', 1);
                                 }
                             }
                         },
-                        services: {store: [], trade: {}}
+                        services: {store: [], trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.solar)}
                     }
                 ],
 
                 belts: [
-                    {name: 'Main-belt', produce: 'iron', rocks: []},
-                    {name: 'Greek camp', produce: 'iron', rocks: []},
-                    {name: 'Trojan camp', produce: 'iron', rocks: []},
-                    {name: 'Centaurs tribe', produce: 'iron', rocks: []}
+                    {name: 'Main-belt', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Greek camp', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Trojan camp', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Centaurs tribe', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}}
                 ]
             },
             {
                 name: 'Orsala',
 
                 planets: [
-                    {name: 'Gliese',
+                    {
+                        name: 'Gliese',
                         action: {
                             name: 'Transform 100 oil to 1 cultural reform',
                             code: function () {
@@ -125,10 +161,10 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}},
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
+                    },
                     {
                         name: 'Arette',
-                        produce: 'iridium',
                         action: {
                             name: 'Transform 1000 conventional units to 1 iridium',
                             code: function () {
@@ -137,9 +173,10 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
                     },
-                    {name: 'Kepler',
+                    {
+                        name: 'Kepler',
                         action: {
                             name: 'Transform 1000 conventional units to Repair',
                             code: function () {
@@ -148,8 +185,10 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}},
-                    {name: 'Ko Pur',
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
+                    },
+                    {
+                        name: 'Ko Pur',
                         action: {
                             name: 'Transform 100 iron to 1 cultural concept',
                             code: function () {
@@ -158,7 +197,8 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: {}, trade: {}}}
+                        services: {store: {}, trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
+                    }
                 ],
 
                 stations: [
@@ -172,7 +212,7 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: [], trade: SpaceHelper.generateMarket()}
+                        services: {store: [], trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
                     },
                     {
                         name: 'Pirate Hangout',
@@ -184,15 +224,15 @@ Space = {
                                 }
                             }
                         },
-                        services: {store: [], trade: {}}
+                        services: {store: [], trade: SpaceHelper.generateMarket(SpaceHelper.price_guide.orsala)}
                     }
                 ],
 
                 belts: [
-                    {name: 'Main-belt', produce: 'uranium', rocks: []},
-                    {name: 'Maya camp', produce: 'uranium', rocks: []},
-                    {name: 'Aztec camp', produce: 'uranium', rocks: []},
-                    {name: 'Leviathan shore', produce: 'uranium', rocks: []}
+                    {name: 'Main-belt', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Maya camp', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Aztec camp', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Leviathan shore', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}}
                 ]
             }
         ]
@@ -201,33 +241,42 @@ Space = {
 
 Space.tick = function () {
     if (this.state == 'flight') {
-        this.flight.counter++;
-        if (this.flight.counter == this.flight.length) {
+        this.flight.counter += this.calcSpeed();
+        if (this.flight.counter >= this.flight.length) {
             message("Arrival!");
             this.flight_arrival_function();
         }
     }
 };
 
+Space.calcSpeed = function () {
+    return (Player.ship.getSpeed()/100) * ((this.flight.warp_active ? 10 : 1));
+};
+
 Space.getHTML = function () {
     var html = `
     <hr>
-    <button class="collapsar" data-toggle="collapse" data-target="#space_collapse">-</button>
+    <button class="collapsar btn btn-default" data-toggle="collapse" data-target="#space_collapse"></button>
     <div class="flex-element" id="space_title_container">${Space.getSpaceTitle()}</div>
     <div class="flex-element flex-container-row">`;
+
     space_resources.forEach(function (resource) {
-        var secret_class = (['planet', 'station'].indexOf(Space.state) == -1) ? ' init_secret ' : ' ';
         html += `
                 <div class="flex-element">
-                ${resource}: ${Player.ship.cargo.resources[resource]}
-                <button class="${secret_class}" onclick="Space.buy('${resource}')">buy</button>
-                <button class="${secret_class}" onclick="Space.sell('${resource}')">sell</button>
-                </div>`;
+                ${resource}: ${Player.ship.cargo.resources[resource]}`;
+                if (['planet', 'station'].indexOf(Space.state) !== -1) {
+                    var order = Space.getCurrentObject().services.trade[resource];
+                    html += `
+                        <button class="btn btn-default" onclick="Space.buy('${resource}', ${order.count}, ${order.buy_price})">Buy ${order.buy_price}</button>
+                        <button class="btn btn-default" onclick="Space.sell('${resource}', ${order.count}, ${order.sell_price})">Sell ${order.sell_price}</button>
+                        <span>in stock: ${order.count}</span>`;
+                }
+        html += `</div>`;
     });
     html += `</div>
     <div class="flex-element flex-container-row">
-        <div class="flex-element">Cargo: ${Player.ship.getCargoFullness()}/${Player.ship.getCargoCapacity()}</div>
-        <div class="flex-element">Speed: 100/100</div>
+        <div class="flex-element">Cargo: ${Player.ship.getCargoFullness().toFixed(2)}/${Player.ship.getCargoCapacity()}</div>
+        <div class="flex-element">Speed: ${(Space.calcSpeed()*100).toFixed(0)}/100</div>
         <div class="flex-element">Armor: 100/100</div>
         <div class="flex-element">Shield: 100/100</div>
     </div>
@@ -239,15 +288,16 @@ Space.getHTML = function () {
     return html;
 };
 
-
-
 Space.getSpaceTitle = function () {
     var html = `Space. `;
 
-
-
     if (Space.state == 'flight') {
-        html += 'You in warp.';
+        if (Space.flight.warp_active) {
+            html += 'You in warp.';
+        }
+        else {
+            html += 'You in flight.';
+        }
     }
     else {
         if (Space.current_object.type == 'system') {
@@ -262,7 +312,6 @@ Space.getSpaceTitle = function () {
     return html;
 };
 
-
 Space.getSpaceString = function () {
     var states = {
         system: function () {
@@ -270,17 +319,17 @@ Space.getSpaceString = function () {
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
             Space.map.systems[Space.current_system].planets.forEach(function (planet, id) {
-                html += `<div><button onclick="Space.startFly('planet', ${id})">Fly</button> to ${planet.name} planet</div>`;
+                html += `<div><button class="btn btn-default" onclick="Space.startFly('planet', ${id})">Fly</button> to ${planet.name} planet</div>`;
             });
             Space.map.systems[Space.current_system].belts.forEach(function (belt, id) {
-                html += `<div><button onclick="Space.startFly('belt', ${id})">Fly</button> to ${belt.name} belt</div>`;
+                html += `<div><button class="btn btn-default" onclick="Space.startFly('belt', ${id})">Fly</button> to ${belt.name} belt</div>`;
             });
             Space.map.systems[Space.current_system].stations.forEach(function (station, id) {
-                html += `<div><button onclick="Space.startFly('station', ${id})">Fly</button> to ${station.name} station</div>`;
+                html += `<div><button class="btn btn-default" onclick="Space.startFly('station', ${id})">Fly</button> to ${station.name} station</div>`;
             });
             Space.map.systems.forEach(function (system, id) {
                 if (id == Space.current_system) return;
-                html += `<div><button onclick="Space.startFly('system', ${id})">Jump</button> to ${system.name} system</div>`;
+                html += `<div><button class="btn btn-default" onclick="Space.startFly('system', ${id})">Jump</button> to ${system.name} system</div>`;
             });
             html +=`</div></div>`;
             return html;
@@ -289,9 +338,9 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
-            html +=`<div>Sped: ${Player.ship.getSpeed()}. </div>`;
             html +=`<div>Destination: ${Space.flight.target.obj.name} ${Space.flight.target.type}. </div>`;
-            html +=`<div>Progress: ${Space.flight.counter}/${Space.flight.length} </div>`;
+            html +=`<div>Progress: ${Space.flight.counter.toFixed(0)}/${Space.flight.length} </div>`;
+            if (Space.flight.warp_active !== 1) { html +=`<button class="btn btn-default" onclick="Space.flyFast()">Activate Warp Drive</button>`; }
             html +=`</div></div>`;
             return html;
         },
@@ -299,8 +348,8 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
-            html +=`<button onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
-            html +=`<button onclick="Space.start()">Start from the planet</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.start()">Start from the planet</button>`;
             html +=`</div></div>`;
             return html;
         },
@@ -308,7 +357,8 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
-            html +=`<button onclick="Space.start()">Moving away from the belt.</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.start()">Moving away from the belt.</button>`;
             html +=`</div></div>`;
             return html;
         },
@@ -316,14 +366,24 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
-            html +=`<button onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
-            html +=`<button onclick="Space.start()">Start from the station</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
+            html +=`<button class="btn btn-default" onclick="Space.start()">Start from the station</button>`;
             html +=`</div></div>`;
             return html;
         },
     };
 
     return states[this.state]();
+};
+
+
+Space.getCurrentObject = function () {
+    if (this.state == 'system') {
+        return Space.map.systems[Space.current_system];
+    }
+    else {
+        return Space.map.systems[Space.current_system][`${Space.current_object.type}s`][Space.current_object.id];
+    }
 };
 
 Space.startFly = function(type, id) {
@@ -334,41 +394,61 @@ Space.startFly = function(type, id) {
 
     if (type == 'system') {
         this.flight.target.obj = Space.map.systems[id];
-        this.current_system = id;
+        if (Space.current_object.type == 'system') {
+            this.current_system = id;
+            this.flight.length = 420;
+        }
+        else {
+            this.flight.length = 60;
+        }
     }
     else {
         this.flight.target.obj = Space.map.systems[Space.current_system][type + 's'][id];
+        this.flight.length = 60;
     }
     this.flight.counter = 0;
-    this.flight.length = 5;
     this.flight_arrival_function = function () {
         Space.state = Space.flight.target.type;
         Space.current_object.id = Space.flight.target.id;
         Space.current_object.type = Space.flight.target.type;
+        Space.flight.warp_active = 0;
         Space.flight.target = {id: null, type: null, obj: null};
     }
 
 
 };
 
+Space.flyFast = function() {
+    if (Player.action_points < 1) {
+        message("Not enough action points.");
+        return false;
+    }
+    message('Warp drive active');
+    Player.action_points--;
+    Space.flight.warp_active = 1;
+};
+
 Space.start = function() {
     this.startFly('system', this.current_system);
 };
 
-Space.buy = function (resource) {
-    var count = 0;
-    var price = 0;
+Space.buy = function(resource, count, price) {
+    if (!Player.ship.checkSpace()) return false;
+
+    if (count < 1) {
+        message(resource.capitalizeFirstLetter() + " out of stock")
+        return false;
+    }
+
     if (Player.withdraw('conventional_units', price)) {
-        Player.ship.reward('iridium', count);
+        Space.getCurrentObject().services.trade[resource].count--;
+        Player.ship.reward(resource, 1);
     }
 };
 
-Space.sell = function (resource) {
-    var count = 0;
-    var price = 0;
-    if (Player.ship.withdraw('iridium', count)) {
-
-        Player.withdraw('conventional_units', price)
+Space.sell = function(resource, count, price) {
+    if (Player.ship.withdraw(resource, 1)) {
+        Player.reward('conventional_units', price)
     }
 };
 

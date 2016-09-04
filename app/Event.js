@@ -58,6 +58,7 @@ Event.holdEvent = function(event_id) {
         });
 
         events.db.splice(event_id, 1);
+        Gatherer.holdEvent();
         this.invent();
         draw_all();
     }
@@ -93,9 +94,9 @@ Event.inventButton = function () {
 
 Event.getHTML = function () {
     var html = `<hr>
-        <button class="collapsar" data-toggle="collapse" data-target="#events_collapse">-</button>
+        <button class="collapsar btn btn-default" data-toggle="collapse" data-target="#events_collapse"></button>
             Events:
-        <button class = "init_secret"  id="invent_container" onclick="Event.inventButton();">Invent a New Event</button>
+        <button class="init_secret btn btn-default"  id="invent_container" onclick="Event.inventButton();">Invent a New Event</button>
         <div class="collapse in" id="events_collapse">
             <div class="flex-container-row" id="events">`;
 
@@ -105,10 +106,10 @@ Event.getHTML = function () {
     events.db.forEach(function (event, id) {
         html += `
         <div class="flex-element"> 
-            <button id="hold_event_container" onclick="Event.holdEvent('${id}')">Hold Event</button>`;
+            <button id="hold_event_container" class="btn btn-default" onclick="Event.holdEvent('${id}')">Hold Event</button>`;
             var secret_class = (Player.found_secrets.indexOf("cancel_event") == -1) ? "init_secret" : "";
             html += `
-            <button class="${secret_class}" onclick="Event.cancelEvent('${id}')">Cancel Event</button>
+            <button class="${secret_class} btn btn-default" onclick="Event.cancelEvent('${id}')">Cancel Event</button>
             <br>Cost:
             <div class="flex-container-row">`;
                 for (var key in event.cost) {
